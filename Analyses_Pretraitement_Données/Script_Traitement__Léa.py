@@ -255,4 +255,12 @@ X_test_encoded[quantitative_vars] = scaler.transform(X_test_encoded[quantitative
 # Vérification
 X_train_resampled[quantitative_vars].describe().T
 
+# Enregistrement des DF 
+df.to_csv("../Données/BASE_INTERMEDIAIRE/df_preprocessed.csv", index=False)
+import pandas as pd
 
+pd.DataFrame(X_train_final).to_csv("../Données/BASE_MODELISATION/X_train_final.csv", index=False)
+pd.DataFrame(y_train_final).to_csv("../Données/BASE_MODELISATION/y_train_final.csv", index=False)
+
+pd.DataFrame(X_test_final).to_csv("../Données/BASE_MODELISATION/X_test_final.csv", index=False)
+pd.DataFrame(y_test_final).to_csv("../Données/BASE_MODELISATION/y_test_final.csv", index=False)
