@@ -1,0 +1,9 @@
+Variable,KS Simple vs MICE,Var Simple vs MICE,KS KNN vs MICE,Var KNN vs MICE
+age,1.0,1.0,0.0,0.0
+cigarettes_par_jour,1.0,0.6642,0.0,0.0
+cholesterol_total,1.0,0.8599,0.0,0.0
+tension_systolique,1.0,1.0,0.0,0.0
+tension_diastolique,1.0,1.0,0.0,0.0
+imc,1.0,0.887,0.0,0.0
+frequence_cardiaque,1.0,0.9981,0.0,0.0
+glucose,0.0,0.4887,0.0,0.0
