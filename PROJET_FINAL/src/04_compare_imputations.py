@@ -17,9 +17,10 @@ os.makedirs("PROJET_FINAL/COMPARAISONS_IMPUTATIONS", exist_ok=True)
 # 1. Chargement des datasets imputés (A1, KNN, MICE)
 # ============================================================
 
-X_train_simple = pd.read_csv("PROJET_FINAL/X_train_A1.csv")
-X_train_knn = pd.read_csv("PROJET_FINAL/X_train_KNN.csv")
-X_train_mice = pd.read_csv("PROJET_FINAL/X_train_MICE.csv")
+X_train_simple = pd.read_csv("PROJET_FINAL/data/processed/imputations/X_train_A1.csv")
+X_train_knn    = pd.read_csv("PROJET_FINAL/data/processed/imputations/X_train_KNN.csv")
+X_train_mice   = pd.read_csv("PROJET_FINAL/data/processed/imputations/X_train_MICE.csv")
+
 
 print("Datasets chargés avec succès.")
 print("Dimensions SIMPLE :", X_train_simple.shape)
@@ -75,31 +76,38 @@ from sklearn.utils import resample
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 
+from pathlib import Path
+import pandas as pd
+
 # ============================================================
 # CHARGEMENT DES DONNÉES POUR B2, B3, B4
 # ============================================================
 
-# ============= Chargement des datasets depuis PROJET_FINAL =================
+# Base du projet = dossier PROJET_FINAL (car ton script est dans PROJET_FINAL/src)
+BASE_DIR = Path(__file__).resolve().parents[1]   # .../PROJET_FINAL
+IMPUT_DIR = BASE_DIR / "data" / "processed" / "imputations"
 
-A1_train = pd.read_csv("PROJET_FINAL/X_train_A1.csv")
-A1_test  = pd.read_csv("PROJET_FINAL/X_test_A1.csv")
+# ============= Chargement des datasets =================
 
-KNN_train = pd.read_csv("PROJET_FINAL/X_train_KNN.csv")
-KNN_test  = pd.read_csv("PROJET_FINAL/X_test_KNN.csv")
+A1_train  = pd.read_csv(IMPUT_DIR / "X_train_A1.csv")
+A1_test   = pd.read_csv(IMPUT_DIR / "X_test_A1.csv")
 
-MICE_train = pd.read_csv("PROJET_FINAL/X_train_MICE.csv")
-MICE_test  = pd.read_csv("PROJET_FINAL/X_test_MICE.csv")
+KNN_train = pd.read_csv(IMPUT_DIR / "X_train_KNN.csv")
+KNN_test  = pd.read_csv(IMPUT_DIR / "X_test_KNN.csv")
+
+MICE_train = pd.read_csv(IMPUT_DIR / "X_train_MICE.csv")
+MICE_test  = pd.read_csv(IMPUT_DIR / "X_test_MICE.csv")
 
 # ================= Chargement des cibles =================
 
-y_train_A1 = pd.read_csv("PROJET_FINAL/y_train_A1.csv").squeeze()
-y_test_A1  = pd.read_csv("PROJET_FINAL/y_test_A1.csv").squeeze()
+y_train_A1  = pd.read_csv(IMPUT_DIR / "y_train_A1.csv").squeeze()
+y_test_A1   = pd.read_csv(IMPUT_DIR / "y_test_A1.csv").squeeze()
 
-y_train_KNN = pd.read_csv("PROJET_FINAL/y_train_KNN.csv").squeeze()
-y_test_KNN  = pd.read_csv("PROJET_FINAL/y_test_KNN.csv").squeeze()
+y_train_KNN = pd.read_csv(IMPUT_DIR / "y_train_KNN.csv").squeeze()
+y_test_KNN  = pd.read_csv(IMPUT_DIR / "y_test_KNN.csv").squeeze()
 
-y_train_MICE = pd.read_csv("PROJET_FINAL/y_train_MICE.csv").squeeze()
-y_test_MICE  = pd.read_csv("PROJET_FINAL/y_test_MICE.csv").squeeze()
+y_train_MICE = pd.read_csv(IMPUT_DIR / "y_train_MICE.csv").squeeze()
+y_test_MICE  = pd.read_csv(IMPUT_DIR / "y_test_MICE.csv").squeeze()
 
 # Ajout de la colonne cible dans chaque dataset
 A1_train["risque_chd_10ans"] = y_train_A1
@@ -114,11 +122,14 @@ MICE_test["risque_chd_10ans"]  = y_test_MICE
 # Supprime les NaN restants côté KNN en utilisant la médiane/mode
 for col in KNN_train.columns:
     if KNN_train[col].dtype == "object":
-        KNN_train[col] = KNN_train[col].fillna(KNN_train[col].mode()[0])
-        KNN_test[col] = KNN_test[col].fillna(KNN_test[col].mode()[0])
+        mode_val = KNN_train[col].mode(dropna=True)
+        fill_val = mode_val.iloc[0] if not mode_val.empty else ""
+        KNN_train[col] = KNN_train[col].fillna(fill_val)
+        KNN_test[col]  = KNN_test[col].fillna(fill_val)
     else:
-        KNN_train[col] = KNN_train[col].fillna(KNN_train[col].median())
-        KNN_test[col] = KNN_test[col].fillna(KNN_test[col].median())
+        med_train = KNN_train[col].median()
+        KNN_train[col] = KNN_train[col].fillna(med_train)
+        KNN_test[col]  = KNN_test[col].fillna(KNN_test[col].median())
 
 
 variables_continues = [

@@ -18,8 +18,14 @@ from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
     brier_score_loss,
-    confusion_matrix
+    confusion_matrix,
+    roc_curve,
+    precision_recall_curve,
 )
+
+from sklearn.calibration import calibration_curve
+import matplotlib.pyplot as plt
+
 
 print("=== Évaluation de la calibration du modèle LogReg_B2 ===")
 
@@ -60,7 +66,7 @@ log_reg_B2 = LogisticRegression(
 )
 
 log_reg_B2.fit(X_train_B2, y_train_B2)
-print("✅ Modèle LogReg_B2 ré-entraîné.")
+print(" Modèle LogReg_B2 ré-entraîné.")
 
 # 3) Probabilités et métriques au seuil 0.5 ----------------------------------
 print("\n=== Évaluation sur le jeu de test : seuil 0.5 ===")
@@ -137,3 +143,70 @@ print("- Ici, on a cherché un seuil qui maximise le F1 de la classe 1 (événem
 print("  ce qui met l'accent sur un compromis entre sensibilité (recall) et précision.")
 print("=== Fin de l'évaluation de la calibration de LogReg_B2 ===")
 
+
+
+# 5) Dossier pour sauvegarder les figures ------------------------------------
+FIG_DIR = BASE_DIR / "reports" / "figures"
+FIG_DIR.mkdir(parents=True, exist_ok=True)
+print("\nLes figures seront sauvegardées dans :", FIG_DIR)
+
+# 6) Courbe ROC --------------------------------------------------------------
+print("\n=== Génération de la courbe ROC ===")
+fpr, tpr, thresholds_roc = roc_curve(y_test, y_prob)
+
+plt.figure(figsize=(6, 6))
+plt.plot(fpr, tpr, label=f"LogReg_B2 (AUC = {auc_roc:.3f})")
+plt.plot([0, 1], [0, 1], linestyle="--", color="grey", label="Hasard")
+plt.xlabel("Taux de faux positifs (1 - Spécificité)")
+plt.ylabel("Taux de vrais positifs (Sensibilité)")
+plt.title("Courbe ROC – Régression logistique (LogReg_B2)")
+plt.legend()
+plt.grid(alpha=0.3)
+
+roc_path = FIG_DIR / "logreg_B2_ROC.png"
+plt.savefig(roc_path, dpi=300, bbox_inches="tight")
+print("Courbe ROC sauvée sous :", roc_path)
+
+# 7) Courbe Precision–Recall -------------------------------------------------
+print("\n=== Génération de la courbe Precision–Recall ===")
+precisions, recalls, thresholds_pr = precision_recall_curve(y_test, y_prob)
+
+plt.figure(figsize=(6, 6))
+plt.plot(recalls, precisions, label=f"LogReg_B2 (AUC-PR = {auc_pr:.3f})")
+# Ligne de base : prévalence de la classe 1
+baseline = y_test.mean()
+plt.hlines(baseline, 0, 1, linestyles="--", color="grey",
+           label=f"Hasard (prévalence = {baseline:.2f})")
+plt.xlabel("Recall (Sensibilité)")
+plt.ylabel("Precision (Valeur prédictive positive)")
+plt.title("Courbe Precision–Recall – Régression logistique (LogReg_B2)")
+plt.legend()
+plt.grid(alpha=0.3)
+
+pr_path = FIG_DIR / "logreg_B2_PR.png"
+plt.savefig(pr_path, dpi=300, bbox_inches="tight")
+print("Courbe PR sauvée sous :", pr_path)
+
+# 8) Courbe de calibration ---------------------------------------------------
+print("\n=== Génération de la courbe de calibration ===")
+# n_bins = 10 = on divise les patients en 10 groupes selon la probabilité prédite
+prob_true, prob_pred = calibration_curve(y_test, y_prob, n_bins=10, strategy="quantile")
+
+plt.figure(figsize=(6, 6))
+# Ligne idéale : modèle parfaitement calibré
+plt.plot([0, 1], [0, 1], linestyle="--", color="grey", label="Calibration parfaite")
+# Points du modèle
+plt.plot(prob_pred, prob_true, marker="o", linestyle="-",
+         label="LogReg_B2")
+
+plt.xlabel("Probabilité prédite moyenne par groupe")
+plt.ylabel("Risque observé (proportion d'événements)")
+plt.title("Courbe de calibration – Régression logistique (LogReg_B2)")
+plt.legend()
+plt.grid(alpha=0.3)
+
+cal_path = FIG_DIR / "logreg_B2_calibration.png"
+plt.savefig(cal_path, dpi=300, bbox_inches="tight")
+print("Courbe de calibration sauvée sous :", cal_path)
+
+print("\n=== Fin complète du script calibration_logreg_B2.py ===")
