@@ -23,7 +23,7 @@ from sklearn.metrics import classification_report
 # 1. Paramètres généraux de l'expérience
 # -------------------------------------------------------------------
 
-alpha = 0.20            # => on vise une couverture ≈ 90 %
+alpha = 0.10            # => on vise une couverture ≈ 90 %
 test_size_calib = 0.20  # 20 % du train pour la calibration
 RANDOM_STATE = 42       # pour la reproductibilité
 
